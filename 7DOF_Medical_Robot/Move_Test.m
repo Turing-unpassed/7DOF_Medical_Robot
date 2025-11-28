@@ -3,6 +3,7 @@ clear;
 clc;
 
 Link = MDH_Table_Build();
+Link = Transimation_Matrix_Build(Link);
 
 step=10;
 
@@ -16,7 +17,7 @@ th7=0;
 
 Q=[th1,th2,th3,d4,th5,th6,th7]';
 Forward_kinematics(Link,Q,0);
-pause; 
+input("press Enter to continue...",'s');
 
 for th=0:step:360
     Q(1)=th;
