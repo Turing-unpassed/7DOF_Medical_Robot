@@ -20,7 +20,7 @@ for i=2:8        %给每个关节变量替换为实际值
 end
 
 for i = 1:9
-    Link(i).T = double(Link(i).T);       %将符号矩阵转换为实值矩阵
+    Link(i).T = double(Link(i).T);       %将符号矩阵转换为数值矩阵
 end
 
 for i=2:9
