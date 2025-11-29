@@ -26,9 +26,8 @@ disp('前推')  % 显示进度信息
 
 % 引入重力加速度 g
 syms g
-% 初始化基座的线加速度以模拟重力
+% 初始化基座的线加速度以模拟重力，简化计算，不需要之后每个关节考虑重力
 % 假设重力方向沿 Z 轴负方向，则基座需产生沿 Z 轴正方向的加速度 g
-% 如果重力沿 Y 轴（如某些 PUMA 机器人设定），请改为 [0; g; 0]
 dv(:,:,1) = [0; 0; g]; 
 
 Z_axis = [0; 0; 1]; % Z轴向量
@@ -73,7 +72,33 @@ for i = 1:number_of_links  % 从基座向末端递推
 
     % 6. 计算惯性力矩（欧拉方程）
     % N_i = I_i·α_i + ω_i × (I_i·ω_i)
-    % 修正：inertia_tensor_list(:,:,i) 对应第i个连杆
+    % inertia_tensor_list(:,:,i) 对应第i个连杆
     I_curr = inertia_tensor_list(:,:,i);
     N(:,:,i+1) = I_curr * dw(:,:,i+1) + cross(w(:,:,i+1), I_curr * w(:,:,i+1));
+end
+
+% =========================================================================
+% 第二步：后推
+% =========================================================================
+
+disp('后推')  % 显示进度信息
+f = sym(zeros(3,1,number_of_links+1));  % 各连杆上施加的力（从关节i+1指向关节i）
+n = sym(zeros(3,1,number_of_links+1));  % 各连杆上施加的力矩
+% 初始化末端连杆的外力和外力矩
+f(:,:,number_of_links+1) = f_external(1:3,:)';  % 末端外力
+n(:,:,number_of_links+1) = f_external(4:6,:)';  % 末端外力矩
+for i = number_of_links:-1:1  % 从末端连杆向基座递推
+    disp(['Calculating Link ', num2str(i)])  % 显示当前计算的关节索引
+    
+    R_next = R_list(:,:,i);  % 第i+1个连杆到第i个连杆的旋转矩阵
+    P_next = T_list(1:3,4,i);  % 第i+1个连杆相对于第i个连杆的位置向量
+    
+    % 1. 递推计算力
+    % f_i = R_{i+1} * f_{i+1} + F_i
+    f(:,:,i) = R_next * f(:,:,i+1) + F(:,:,i+1);
+    
+    % 2. 递推计算力矩
+    % n_i = N_i + R_{i+1} * n_{i+1} + r_c_i × F_i + P_{i+1} × (R_{i+1} * f_{i+1})
+    r_ci = mass_center_list(i,:)'; % 质心位置
+    n(:,:,i) = N(:,:,i+1) + R_next * n(:,:,i+1) + cross(r_ci, F(:,:,i+1)) + cross(P_next, R_next * f(:,:,i+1));
 end
