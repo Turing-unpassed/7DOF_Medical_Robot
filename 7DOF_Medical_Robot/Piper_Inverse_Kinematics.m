@@ -20,12 +20,12 @@ link(5).T = subs(link(5).T,q4,d);
 equals = link(1).T*link(2).T*link(3).T*link(4).T*link(5).T*link(6).T(:,4)==p;
 % F = link(4).T*link(5).T*link(6).T(:,4);
 % G = link(3).T*F;
-%S = zeros(3,4);
-% for i = 1:4
-%     s = vpasolve(equals,[th1,th2,th3],[-180,180;-180,180;-180,180],"Random",true);
-%     S(1,i) = s.th1;
-%     S(2,i) = s.th2;
-%     S(3,i) = s.th3;
-% end
-
+S = zeros(3,4);
+for i = 1:4
+    s = vpasolve(equals,[th1,th2,th3],[-180,180;-180,180;-180,180],"Random",true);
+    S(1,i) = s.th1;
+    S(2,i) = s.th2;
+    S(3,i) = s.th3;
+end
+S
 end

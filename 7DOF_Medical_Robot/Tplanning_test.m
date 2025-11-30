@@ -1,12 +1,10 @@
-
-
 close all;
-clear all;
+clear;
 clc;
 
 
 Link = MDH_Table_Build();
-
+Link = Transimation_Matrix_Build(Link);
 % 采样时间间隔 (50ms)
 dt = 0.05;
 
