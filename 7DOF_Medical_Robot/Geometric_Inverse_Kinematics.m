@@ -14,7 +14,7 @@ function Q = Geometric_Inverse_Kinematics(Link,T07)
 %   Detailed explanation goes here
 p = T07(1:3,4);
 length = 300;
-step = 0.1;
+step = 1;
 
 Q = NaN(8,7,length/step+1);  %预分配空间，最多11组解 
 T04 = zeros(4,4,4);
