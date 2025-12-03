@@ -31,88 +31,84 @@ T00 = [1 0 0 0;
 
 T01 = @(theta) [cosd(theta)  -sind(theta)   0      0;
                sind(theta)    cosd(theta)   0      0;
-                   0             0          1     300;
+                   0             0          1     153.7;
                    0             0          0      1];
 
 T12 = @(theta) [cosd(theta)  -sind(theta)   0      0;
-                   0             0         -1    -150;
+                   0             0         -1      0;
                sind(theta)    cosd(theta)   0      0;
                    0             0          0      1];
 
-T23 = @(theta) [cosd(theta)  -sind(theta)   0     200;
+T23 = @(theta) [cosd(theta)  -sind(theta)   0     250.35;
                sind(theta)    cosd(theta)   0      0;
                    0             0          1      0;
                    0             0          0      1];
 
-T34 = @(d) [ 1  0  0  0;
+T34 = @(d) [ 0 -1  0  0;
              0  0  1  d;
-             0 -1  0  0;
+            -1  0  0  0;
              0  0  0  1];
 
 T45 = @(theta) [cosd(theta)  -sind(theta)   0      0;
-               sind(theta)    cosd(theta)   0      0;
-                   0             0          1      0;
+                  0               0         1     84.8;
+                -sind(theta) -cosd(theta)   0      0;
                    0             0          0      1];
 
 for d4 = 0:step:length
     d = 150+d4;
+    thetad = atan2d(Link(6).d,d);
+    l = sqrt(d^2 + Link(6).d^2);
 
     % 每次迭代重置并准备索引
     q = zeros(3,4);
     idx = fix(d4/step+1);
 
     z = p(3)-Link(2).d;
-    % 检查 l 的被开方项，若为负则为不可达/奇异，跳过本次 d4
-    argL = p(1)^2 + p(2)^2 - Link(3).d^2;
-    if argL < 0
-        Q(:,:,idx) = NaN(8,7);
-        continue
-    end
-    l = sqrt(argL);
 
-    q(1,1) = 90 + atan2d(p(2),p(1)) - atan2d(l,Link(3).d);  %th1_1
-    q(1,2) = 90 + atan2d(p(2),p(1)) - atan2d(-l,Link(3).d); %th1_2
+    q(1,1) = atan2d(p(2),p(1));  %th1_1
+    q(1,2) = q(1,1)+180; %th1_2
 
-    x1 = (p(1)-Link(3).d*cosd(q(1,1)-90))/cosd(q(1,1));
-    x2 = (p(1)-Link(3).d*cosd(q(1,2)-90))/cosd(q(1,2));
+    x1 = p(1)/cosd(q(1,1));
+    x2 = p(1)/cosd(q(1,2));
 
-    % 检查 asin 的定义域，若越界则跳过本次 d4
-    s1 = -(x1^2 + z^2 - Link(3).a^2 - d^2) / (2*Link(3).a*d);
-    s2 = -(x2^2 + z^2 - Link(3).a^2 - d^2) / (2*Link(3).a*d);
+    % 检查 acos 的定义域，若越界则跳过本次 d4
+    s1 = (x1^2 + z^2 - Link(3).a^2 - l^2) / (2*Link(3).a*l);
+    s2 = (x2^2 + z^2 - Link(3).a^2 - l^2) / (2*Link(3).a*l);
     if ~isfinite(s1) || ~isfinite(s2) || abs(s1) > 1 || abs(s2) > 1
         Q(:,:,idx) = NaN(8,7);
         continue
     end
-    q(3,1) = asind(s1);  %th3_1
-    q(3,2) = 180 - q(3,1);                          %th3_2
-    q(3,3) = asind(s2);  %th3_3
-    q(3,4) = 180 - q(3,3);                          %th3_4
 
-    th1=90+q(3,1);
-    th2=90+q(3,2);
-    th3=90+q(3,3);
-    th4=90+q(3,4);
+    theta1 = acosd(s1);
+    theta2 = acosd(s2);
+    q(3,1) = theta1 - thetad - 90;  %th3_1
+    q(3,2) = -theta1 - thetad - 90; %th3_2
+    q(3,3) = theta2 - thetad - 90;  %th3_3
+    q(3,4) = -theta2 - thetad - 90; %th3_4
 
-    k11 = Link(3).a+d*cosd(th1);
-    k12 = Link(3).a+d*cosd(th2);
-    k13 = Link(3).a+d*cosd(th3);
-    k14 = Link(3).a+d*cosd(th4);
+    k1 = (x1^2 + z^2 + Link(3).a^2 - l^2) / (2*Link(3).a*sqrt(x1^2+z^2));
+    k2 = (x2^2 + z^2 + Link(3).a^2 - l^2) / (2*Link(3).a*sqrt(x2^2+z^2));
+    if ~isfinite(k1) || abs(k1) > 1 || ~isfinite(k2) || abs(k2) > 1
+        Q(:,:,idx) = NaN(8,7);
+        continue
+    end
+    phi1 = acosd(k1);
+    phi2 = acosd(k2);
+    if theta1
+        q(2,1) = atan2d(z,x1) - phi1;    %th2_1
+        q(2,2) = atan2d(z,x1) + phi1;    %th2_2
+    else
+        q(2,1) = atan2d(z,x1) + phi1;    %th2_1
+        q(2,2) = atan2d(z,x1) - phi1;    %th2_2
+    end
 
-    k21 = d*sind(th1);
-    k22 = d*sind(th2);
-    k23 = d*sind(th3);
-    k24 = d*sind(th4);
-
-    r1 = sqrt(k11^2+k21^2);
-    r2 = sqrt(k12^2+k22^2);
-    r3 = sqrt(k13^2+k23^2);
-    r4 = sqrt(k14^2+k24^2);
-
-    q(2,1) = atan2d(z/r1,x1/r1)-atan2d(k21,k11);    %th2_1
-    q(2,2) = atan2d(z/r2,x1/r2)-atan2d(k22,k12);    %th2_2
-    q(2,3) = atan2d(z/r3,x2/r3)-atan2d(k23,k13);    %th2_3
-    q(2,4) = atan2d(z/r4,x2/r4)-atan2d(k24,k14);    %th2_4
-    
+    if theta2
+        q(2,3) = atan2d(z,x2) - phi2;    %th2_3
+        q(2,4) = atan2d(z,x2) + phi2;    %th2_4
+    else
+        q(2,3) = atan2d(z,x2) + phi2;    %th2_3
+        q(2,4) = atan2d(z,x2) - phi2;    %th2_4
+    end
     % 若计算出的任何角为非实数或 NaN，视为不可达
     if any(~isfinite(q(:))) || ~isreal(q)
         Q(:,:,idx) = NaN(8,7);

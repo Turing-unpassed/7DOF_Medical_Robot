@@ -9,6 +9,9 @@ joint_col = 0;
 % T45 = Link(6).T;
 % l = symvar(T45);
 % T45 = double(subs(T45,l,0));
+% for i=1:6
+%     Link(i).T
+% end
 for i=2:8        %给每个关节变量替换为实际值
     if(i==5)
         q = symvar(Link(i).T);
@@ -29,8 +32,10 @@ for i=2:9
 end
 
 for i=1:8
-    DrawJoint(Link(i).T, radius,len, joint_col);
-%     DrawFrame(Link(i).T);
+    if(i~=2)
+        DrawJoint(Link(i).T, radius,len, joint_col);
+    end
+    % DrawFrame(Link(i).T);
 end
 
 DrawFrame(Link(1).T);
