@@ -16,18 +16,18 @@ Link = MDH_Table_Build();
 % 3. 轨迹规划 (参考 EndPoint_TrajectoryPlanning.m)
 % =========================================================================
 % 初始关节角度 (用于逆解的初始猜测)
-th1 = 89.6218;
-th2 = 273.1024;
-th3 = 16.6555;
-d4 = 0;
-th5 = 0;
-th6 = 70.2421;
-th7 = 270.3782;
+th1=45.0000; 
+th2=41.7585;
+th3=117.2310;
+d4=0;
+th5=90.0000;
+th6=248.9896;
+th7=135;
 q_prev_initial = [th1, th2, th3, d4, th5, th6, th7];
 
 % 笛卡尔空间规划参数
 q0 = [151, 151, 151, 0, 0, 0];
-q1 = [450, 450, 450, 0, 0, 180];
+q1 = [450, 450, 450, 360, 360, 180];
 v_max = [1000, 1000, 1000, 1000, 1000, 1000];
 A = [1000, 1000, 1000, 1000, 1000, 1000];
 dt = 0.01;
@@ -49,17 +49,27 @@ Link_IK = Transimation_Matrix_Build(Link);
 % --- 仿真初始化 ---
 figure('Name', 'Robot Motion Simulation');
 Forward_kinematics(Link_IK, q_prev, 0);
-pause(1);
+pause(2);
 
 fprintf('正在进行逆运动学求解与仿真...\n');
 for i = 1:step
     % 构建末端变换矩阵
     % 参考 EndPoint_TrajectoryPlanning.m 中的构建方式
-    T_end = [cosd(Q_cart(i,6)), -sind(Q_cart(i,6)), 0, Q_cart(i,1);
-             sind(Q_cart(i,6)),  cosd(Q_cart(i,6)), 0, Q_cart(i,2);
-             0,                  0,                 1, Q_cart(i,3);
-             0,                  0,                 0, 1];
-             
+    r11 = cosd(Q_cart(i,4))*cosd(Q_cart(i,5))*cosd(Q_cart(i,6)) - sind(Q_cart(i,4))*sind(Q_cart(i,6));
+    r21 = sind(Q_cart(i,4))*cosd(Q_cart(i,5))*cosd(Q_cart(i,6)) + cosd(Q_cart(i,4))*sind(Q_cart(i,6));
+    r31 = -sind(Q_cart(i,5))*cosd(Q_cart(i,6));
+    r12 = -cosd(Q_cart(i,4))*cosd(Q_cart(i,5))*sind(Q_cart(i,6)) - sind(Q_cart(i,4))*cosd(Q_cart(i,6));
+    r22 = -sind(Q_cart(i,4))*cosd(Q_cart(i,5))*sind(Q_cart(i,6)) + cosd(Q_cart(i,4))*cosd(Q_cart(i,6));
+    r32 = sind(Q_cart(i,5))*sind(Q_cart(i,6));
+    r13 = cosd(Q_cart(i,4))*sind(Q_cart(i,5));
+    r23 = sind(Q_cart(i,4))*sind(Q_cart(i,5));
+    r33 = cosd(Q_cart(i,5));
+
+    T_end = [r11    r12    r13    Q_cart(i,1);
+             r21    r22    r23    Q_cart(i,2);
+             r31    r32    r33    Q_cart(i,3);
+              0      0      0        1  ];
+
     Q_sols = Geometric_Inverse_Kinematics(Link_IK, T_end);
     [q_best, ~, ~] = Select_Optimal_Solution(Q_sols, q_prev);
     
