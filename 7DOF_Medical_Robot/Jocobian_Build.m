@@ -3,7 +3,7 @@ function J = Jocobian_Build(link,q)
 %   Detailed explanation goes here
 
 J = zeros(6,7);  %预分配雅可比矩阵空间
-T = zeros(4,4,7);  %预分配变换矩阵空间
+T = zeros(4,4,8);  %预分配变换矩阵空间
 
 T01 = @(theta) [cosd(theta)  -sind(theta)   0      0;
                sind(theta)    cosd(theta)   0      0;
@@ -39,7 +39,8 @@ T67 = @(theta) [cosd(theta)  -sind(theta)   0      0;
                   0               0         1      0;
                 -sind(theta) -cosd(theta)   0      0;
                    0             0          0      1];            
-                   
+ 
+T77 = eye(4);
 T1 = T01(q(1));                     % T01(q1)
 T2 = T12(q(2));                     % T12(q2)
 T3 = T23(q(3));                     % T23(q3)
@@ -47,20 +48,21 @@ T4 = T34(q(4));                   % T34(q4)
 T5 = T45(q(5));                     % T45(q5)
 T6 = T56(q(6));                     % T56(q6)
 T7 = T67(q(7));                     % T67(q7)
+T8 = T77;                          % T77
 
 T07 = T1*T2*T3*T4*T5*T6*T7;    % 末端相对基坐标系的变换矩阵
 
-T = cat(3,T1,T2,T3,T4,T5,T6,T7);   %将变换矩阵按顺序存入T矩阵
+T = cat(3,T1,T2,T3,T4,T5,T6,T7,T8);   %将变换矩阵按顺序存入T矩阵
 
 for i = 1:7
-    Ti = eye(4);                       %初始化为单位矩阵
-    for j = i:7
-        Ti = Ti*T(:,:,j);           %计算各个关节相对基坐标系的变换矩阵
+    Tin = eye(4);                       %初始化为单位矩阵
+    for j = i+1:8
+        Tin = Tin*T(:,:,j);           %计算各个关节相对基坐标系的变换矩阵
     end
-    n = Ti(1:3,1);
-    o = Ti(1:3,2);
-    a = Ti(1:3,3);
-    p = Ti(1:3,4);
+    n = Tin(1:3,1);
+    o = Tin(1:3,2);
+    a = Tin(1:3,3);
+    p = Tin(1:3,4);
     x = cross(p,n);
     y = cross(p,o);
     z = cross(p,a);
@@ -81,9 +83,10 @@ for i = 1:7
     end
 
 end
-
-R = T07(1:3,1:3);
-
-J = [R,0;0,R]*J;   %将雅可比矩阵转换到基坐标系下
+R = zeros(6,6);
+r = T07(1:3,1:3);
+R(1:3,1:3) = r;
+R(4:6,4:6) = r;
+J = R*J;   %将雅可比矩阵转换到基坐标系下
 
 end
