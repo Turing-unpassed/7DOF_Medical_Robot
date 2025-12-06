@@ -1,18 +1,20 @@
-function F_list = NewtonEulerCal(T_list,R_list ,mass_list, mass_center_list, inertia_tensor_list, f_external, dq_list, ddq_list)
+function F_list = NewtonEulerCal(T_list,R_list ,mass_list, mass_center_list, inertia_tensor_list, f_external, dq_list, ddq_list, joint_type_list)
 % 使用牛顿欧拉法计算机械臂各关节的力矩 (数值计算版)
 % 输入参数：
-%   T_list:                 机械臂各连杆的齐次变换矩阵列表  (4x4xN)
-%   R_list:                 机械臂各连杆的旋转矩阵列表      (3x3xN)
-%   mass_list:              机械臂各连杆的质量列表          (Nx1)
-%   mass_center_list:       机械臂各连杆质心位置列表        (Nx3)
-%   inertia_tensor_list:    机械臂各连杆惯性张量列表        (3x3xN)
-%   f_external:             末端连杆外力和外力矩            (6x1)
-%   dq_list:                各关节角速度列表                (Nx1)
-%   ddq_list:               各关节角加速度列表              (Nx1)
+%   ...
+%   joint_type_list:        (可选) 各关节类型列表           (Nx1)   0:旋转副, 1:移动副
 % 输出参数：
 %   F_list:                 各关节的力矩列表                (Nx1)
 
 number_of_links = size(mass_list,1);  % 连杆数量
+
+% 处理可选参数 joint_type_list
+if nargin < 9
+    joint_type_list = zeros(number_of_links, 1);
+    if number_of_links >= 4
+        joint_type_list(4) = 1; % 默认第4关节为移动副
+    end
+end
 
 % 初始化变量
 w = zeros(3,1,number_of_links+1);      % 角速度
@@ -48,8 +50,8 @@ for i = 1:number_of_links  % 从基座向末端递推
     dw_prev = dw(:,:,i);
     dv_prev = dv(:,:,i);
     
-    % 注意：这里硬编码了第4关节为移动副(Prismatic)，其余为转动副(Revolute)
-    if i == 4 
+    % 注意：根据 joint_type_list 判断关节类型
+    if joint_type_list(i) == 1 
         % --- 移动副 (Prismatic Joint) ---
         % 1. 角速度 (无相对旋转)
         w(:,:,i+1) = R_curr' * w_prev;
@@ -130,7 +132,7 @@ end
 F_list = zeros(number_of_links,1);  % 各关节力矩列表
 
 for i = 1:number_of_links
-    if i == 4 % 伸缩关节提取力
+    if joint_type_list(i) == 1 % 伸缩关节提取力
         F_list(i) = dot(f(:,:,i), Z_axis);
     else % 旋转关节提取力矩
         F_list(i) = dot(n(:,:,i), Z_axis);
