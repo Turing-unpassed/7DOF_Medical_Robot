@@ -6,7 +6,7 @@ clc;
 Link = MDH_Table_Build();
 Link = Transimation_Matrix_Build(Link);
 
-step=10;
+step=1;
 
 th1=0; 
 th2=0;
@@ -22,7 +22,7 @@ input("press Enter to continue...",'s');
 
 for th=0:step:360
     Q(1)=th;
-    Forward_kinematics(Link,Q,1);
+    T = Forward_kinematics(Link,Q,1);
 end
 
 for th=0:step:360

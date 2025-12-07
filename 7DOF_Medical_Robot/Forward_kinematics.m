@@ -39,6 +39,7 @@ for i=1:8
 end
 
 DrawFrame(Link(1).T);
+DrawFrame(Link(2).T);
 DrawFrame(Link(8).T);
 
 axis([-300,600,-300,600,-300,600]);

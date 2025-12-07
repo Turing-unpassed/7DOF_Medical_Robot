@@ -23,6 +23,11 @@ Q=[th1,th2,th3,d4,th5,th6,th7];
 %      0,0,1,150;
 %      0,0,0,1];
 % Geometric_Inverse_Kinematics(Link,T);
+points = WorkSpace_Create(50000);
+
+Singularity_Analyse(Link,50000);
+
+
 
 
 
