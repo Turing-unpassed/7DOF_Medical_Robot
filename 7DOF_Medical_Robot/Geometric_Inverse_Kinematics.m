@@ -3,20 +3,20 @@ function Q = Geometric_Inverse_Kinematics(Link,T07)
 %                   q[1,1] --------------q[1,2]
 %                     |                     |
 %                 |       |             |        |
-%               q[2,1]  q[2,2]        q[2,3]  q[2,4]    
+%               q[2,1]  q[2,2]        q[2,3]  q[2,4]
 %                 |       |             |        |
 %                 |       |             |        |
 %              q[3,1]   q[3,2]        q[3,3]   q[3,4]    每列为一组解，前三轴共四组解
 %                 |       |             |        |
-%              |     | 
-%           angle1  angle2   ----    ------    angle8   
+%              |     |
+%           angle1  angle2   ----    ------    angle8
 %         每列为一组解，共8组
 %   Detailed explanation goes here
 p = T07(1:3,4);
 length = 300;
 step = 0.1;
 
-Q = NaN(8,7,length/step+1);  %预分配空间，最多11组解 
+Q = NaN(8,7,length/step+1);  %预分配空间，最多11组解
 T04 = zeros(4,4,4);
 T05 = zeros(4,4,4);
 T57 = zeros(4,4,4);
@@ -25,34 +25,34 @@ beta = zeros(2,4);
 gamma = zeros(2,4);
 
 T00 = [1 0 0 0;
-       0 1 0 0;
-       0 0 1 0;
-       0 0 0 1];
+    0 1 0 0;
+    0 0 1 0;
+    0 0 0 1];
 
 T01 = @(theta) [cosd(theta)  -sind(theta)   0      0;
-               sind(theta)    cosd(theta)   0      0;
-                   0             0          1     153.7;
-                   0             0          0      1];
+    sind(theta)    cosd(theta)   0      0;
+    0             0          1     153.7;
+    0             0          0      1];
 
 T12 = @(theta) [cosd(theta)  -sind(theta)   0      0;
-                   0             0         -1      0;
-               sind(theta)    cosd(theta)   0      0;
-                   0             0          0      1];
+    0             0         -1      0;
+    sind(theta)    cosd(theta)   0      0;
+    0             0          0      1];
 
 T23 = @(theta) [cosd(theta)  -sind(theta)   0     250.35;
-               sind(theta)    cosd(theta)   0      0;
-                   0             0          1      0;
-                   0             0          0      1];
+    sind(theta)    cosd(theta)   0      0;
+    0             0          1      0;
+    0             0          0      1];
 
 T34 = @(d) [ 0 -1  0  0;
-             0  0  1  d;
-            -1  0  0  0;
-             0  0  0  1];
+    0  0  1  d;
+    -1  0  0  0;
+    0  0  0  1];
 
 T45 = @(theta) [cosd(theta)  -sind(theta)   0      0;
-                  0               0         1     84.8;
-                -sind(theta) -cosd(theta)   0      0;
-                   0             0          0      1];
+    0               0         1     84.8;
+    -sind(theta) -cosd(theta)   0      0;
+    0             0          0      1];
 
 for d4 = 0:step:length
     d = 150+d4;

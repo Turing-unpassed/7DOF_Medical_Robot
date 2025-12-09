@@ -5,13 +5,14 @@ clc;
 Link = MDH_Table_Build();
 Link = Transimation_Matrix_Build(Link);
 
-th1=45.0000; 
-th2=41.7585;
-th3=117.2310;
+th1=225.0000; 
+th2=138.2415;
+th3=3.8072;
 d4=0;
-th5=90.0000;
-th6=248.9896;
-th7=135;
+th5=270.0000;
+th6=127.9514;
+
+th7=135.0000;
 
 q_prev=[th1,th2,th3,d4,th5,th6,th7];
 
