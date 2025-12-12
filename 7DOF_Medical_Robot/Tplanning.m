@@ -71,7 +71,6 @@ function [Q, V, ACC] = Tplanning(q0, q1, v_max, A, dt)
     end
     
     % 找到前三个轴(XYZ)中最慢的那个，作为形态参考
-    % 注意：如果前三个轴都不动，需要特殊处理
     xyz_moving = L(1:3) > EPS;
     if any(xyz_moving)
         % 只在运动的轴中找最慢的

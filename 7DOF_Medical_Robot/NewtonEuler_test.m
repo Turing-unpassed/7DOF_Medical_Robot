@@ -9,6 +9,15 @@ clear; clc; close all;
 % 2. 建立机器人模型 (用于获取 DH 参数)
 % =========================================================================
 Link = MDH_Table_Build();
+% 提取关节类型列表 (0: Revolute, 1: Prismatic)
+% Link(2)对应J1, Link(8)对应J7
+joint_types = zeros(7, 1);
+for k = 1:7
+    if strcmp(Link(k+1).type, 'P')
+        joint_types(k) = 1;
+    end
+end
+
 % 注意：这里不需要调用 Transimation_Matrix_Build，因为我们在循环中手动计算数值矩阵
 % 且 Transimation_Matrix_Build 生成的是符号矩阵，计算慢且不方便
 
@@ -109,7 +118,17 @@ Q_joint_SI = Q_joint;
 Q_joint_SI(:, [1 2 3 5 6 7]) = unwrap(deg2rad(Q_joint(:, [1 2 3 5 6 7]))); 
 
 % 移动关节单位转换 mm -> m
-Q_joint_SI(:, 4) = Q_joint(:, 4) / 1000; 
+for k = 1:7
+    if joint_types(k) == 1
+        Q_joint_SI(:, k) = Q_joint(:, k) / 1000;
+    end
+end
+
+% 【新增修复】对关节位置进行平滑处理，消除微小的 IK 跳变和数值噪声
+% 这可以有效抑制由于逆解不连续导致的速度/加速度脉冲
+for k = 1:7
+    Q_joint_SI(:, k) = smoothdata(Q_joint_SI(:, k), 'gaussian', 20);
+end
 
 dQ_joint_SI = zeros(size(Q_joint_SI));
 ddQ_joint_SI = zeros(size(Q_joint_SI));
@@ -156,9 +175,9 @@ for i = 1:step
         theta_val = Link(link_idx).theta;
         
         % 更新关节变量
-        if j == 4 % J4 是移动副
+        if joint_types(j) == 1 % 移动副
             d_val = d_val + q_curr(j); 
-        else
+        else % 旋转副
             theta_val = theta_val + q_curr(j);
         end
         
@@ -178,7 +197,7 @@ for i = 1:step
         R_list(:,:,j) = T_val(1:3, 1:3);
     end
     
-    F_list = NewtonEulerCal(T_list, R_list, mass_list, mass_center_list, inertia_tensor_list, f_external, dq_curr, ddq_curr);
+    F_list = NewtonEulerCal(T_list, R_list, mass_list, mass_center_list, inertia_tensor_list, f_external, dq_curr, ddq_curr, joint_types);
     F_list_all(i, :) = F_list';
 end
 
@@ -186,18 +205,17 @@ end
 % 7. 绘图
 % =========================================================================
 time = (0:step-1) * dt;
-figure('Name', 'Joint Torques/Forces');
-sgtitle('Joint Torques/Forces during Linear Trajectory');
 
+figure('Name', 'Joint Torques/Forces');
+sgtitle('Joint Torques/Forces');
 for k = 1:7
     subplot(4, 2, k);
     plot(time, F_list_all(:, k), 'LineWidth', 1.5);
     title(['Joint ', num2str(k)]);
-    if k == 4
+    if joint_types(k) == 1
         ylabel('Force (N)');
     else
         ylabel('Torque (N·m)');
     end
-    xlabel('Time (s)');
     grid on;
 end

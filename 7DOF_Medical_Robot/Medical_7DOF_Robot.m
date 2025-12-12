@@ -6,23 +6,23 @@ ToRad = pi/180;
 Link = MDH_Table_Build();
 Link = Transimation_Matrix_Build(Link);
 ToDegree = 180/pi;
-th1=45.0000; 
-th2=41.7585;
-th3=117.2310;
+th1=225.0000; 
+th2=138.2415;
+th3=3.8072;
 d4=0;
-th5=90.0000;
-th6=248.9896;
-th7=135; 
+th5=270.0000;
+th6=127.9514;
+th7=135.0000; 
 
 Q=[th1,th2,th3,d4,th5,th6,th7];
 
-T = Forward_kinematics(Link,Q,0)
+% T = Forward_kinematics(Link,Q,0)
 
-% T = [1,0,0,150;
-%      0,1,0,150;
-%      0,0,1,150;
-%      0,0,0,1];
-Geometric_Inverse_Kinematics(Link,T);
+WorkSpace_Create(50000);
+
+Singularity_Analyse(Link,50000);
+
+
 
 
 
